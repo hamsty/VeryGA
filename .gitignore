@@ -1,0 +1,11 @@
+build/*
+bin/*
+obj_dir/*
+glad/*
+.vscode/
+*.o
+*.d
+*.os
+*.so
+*.a
+.sconsign.dblite
