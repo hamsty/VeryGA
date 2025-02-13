@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.12)
 cmake_policy(SET CMP0072 NEW)
+cmake_policy(SET CMP0144 NEW)
+
 project(verylatega VERSION 0.1.0)
 
 find_package(verilator HINTS $ENV{VERILATOR_ROOT} ${VERILATOR_ROOT})

@@ -275,6 +275,7 @@ void loop()
         // VL_PRINTF("%lu %lu\n", out, topp->in);
 
         if (clk == 1 && old_clk == 0)
+        {
             if (rst == 2)
             {
                 if (hsync == 0 && old_hsync == 1)
@@ -305,7 +306,6 @@ void loop()
 
                 if (vsync == 0 && old_vsync == 1)
                 {
-                    
 
 // glClear(GL_COLOR_BUFFER_BIT);
 
@@ -365,6 +365,7 @@ void loop()
                 return;
                 // glfwPollEvents();
             }
+        }
         old_clk = clk;
     }
 }
@@ -393,7 +394,7 @@ int main()
     emscripten_set_keydown_callback("#canvas", 0, 1, key_callback);
     emscripten_set_keyup_callback("#canvas", 0, 1, key_callback);
     emscripten_set_main_loop(loop, -1, true);
-    emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT,1000);
+    emscripten_set_main_loop_timing(EM_TIMING_SETTIMEOUT, 1000);
 
 #else
     while (true)
