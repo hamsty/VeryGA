@@ -5,28 +5,6 @@ import subprocess, argparse, os
 from tqdm import tqdm_notebook
 
 
-
-
-
-install_steps = {
-    "CMAKE":[
-    "apt-get update",
-    "apt-get install cmake clang"], 
-    "Verilator":[
-    "chmod 777 /content/VeryGA/verilator/bin/verilator_bin",
-    "mkdir VeryMaze",
-    "mkdir VeryMaze/designs",
-    "mkdir VeryGA/build",
-    "cp /content/VeryGA/assets/ /content/VeryGA/build/ -d -r",
-    "apt-get install help2man perl libfl2 libfl-dev zlib1g zlib1g-dev ccache \
-    mold libgoogle-perftools-dev numactl perl-doc"], 
-    "EMSCRIPTEN": [
-    "git clone https://github.com/emscripten-core/emsdk.git",
-    "./emsdk/emsdk install latest",
-    "./emsdk/emsdk activate latest",
-    "source ./emsdk/emsdk_env.sh"]
-}
-
 compile_commands = [
     "./emsdk/upstream/emscripten/emcmake cmake ./VeryGA/ -DVERILATOR_ROOT=/content/VeryGA/verilator -Dverilator_DIR=/content/VeryGA/verilator -B VeryGA/build",
     "rm VeryGA/build/CMakeFiles/verylatega.dir/linkLibs.rsp",
