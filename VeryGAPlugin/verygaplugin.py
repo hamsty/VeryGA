@@ -1,9 +1,10 @@
+from google.colab import output as goutput
 from IPython.core.magic import Magics, cell_magic, magics_class
-from google.colab import output
+from IPython.display import clear_output
 import subprocess, argparse, os
 from tqdm import tqdm_notebook
-from google.colab import output as goutput
-from IPython.display import clear_output
+
+
 
 
 

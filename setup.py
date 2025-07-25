@@ -1,4 +1,7 @@
 from VeryGAPlugin.verygaplugin import VeryGAPlugin
+import os
+
+os.system("git clone https://github.com/hamsty/VeryGA.git /content/VeryGA")
 
 from distutils.core import setup
 

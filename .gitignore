@@ -9,3 +9,4 @@ glad/*
 *.so
 *.a
 .sconsign.dblite
+*/__pycache__/*
