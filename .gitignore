@@ -10,3 +10,5 @@ glad/*
 *.a
 .sconsign.dblite
 */__pycache__/*
+__pycache__/
+VeryGAPlugin.egg-info/*
