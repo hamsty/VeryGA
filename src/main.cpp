@@ -26,6 +26,10 @@
 
 uint32_t mov;
 int rst = 2;
+float fps = 0;
+float fps_media = 0;
+long long quadros = 0;
+Uint32 start_time, frame_time = 0;
 
 // static void error_callback(int error, const char *description)
 // {
@@ -35,6 +39,8 @@ int rst = 2;
 const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
 
 const std::unique_ptr<Vveryga> topp{new Vveryga{contextp.get(), ""}};
+
+
 
 // static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 // {
@@ -130,6 +136,9 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
         {
             rst = 0;
         }
+        else if (!strcmp(keyEvent->code, "KeyF")){
+            printf("%03.2f fps\n", fps);
+        }
         else if (!strcmp(keyEvent->code, "KeyB"))
         {
             if (!contextp->gotFinish())
@@ -139,7 +148,7 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
 
             // Execute 'final' processes
             topp->final();
-
+            printf("%03.2f fps\n", fps_media);
             // Print statistical summary report
             contextp->statsPrintSummary();
 
@@ -189,6 +198,9 @@ int event_listener()
             case SDLK_a:
                 rst = 0;
                 break;
+            case SDLK_f:
+                printf("%03.2f fps\n", fps);
+                break;
             }
             break;
         case SDL_KEYUP:
@@ -200,10 +212,10 @@ int event_listener()
             {
                 VL_DEBUG_IF(VL_PRINTF("+ Exiting without $finish; no events left\n"););
             }
-
+            
             // Execute 'final' processes
             topp->final();
-
+            printf("%03.2f fps\n", fps_media);
             // Print statistical summary report
             contextp->statsPrintSummary();
 
@@ -249,6 +261,7 @@ int hsync = 1;
 int vsync = 1;
 int clk = 0;
 int en_hcount = true;
+
 
 void loop()
 {
@@ -321,7 +334,14 @@ void loop()
                     if (vcount > 0)
                     {
                         vcount = 0;
-                        // printf("quadro\n");
+                        frame_time = SDL_GetTicks() - start_time;
+                        fps = (frame_time > 0) ? 1000.0f / frame_time : 0.0f;
+
+                        start_time = SDL_GetTicks();frame_time = SDL_GetTicks() - start_time;
+                        fps_media = ((fps_media*quadros) + fps);
+                        quadros++;
+                        fps_media /= quadros;
+
                         return;
                     }
                     vcount = 0;
