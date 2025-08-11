@@ -27,7 +27,7 @@
 uint32_t mov;
 int rst = 2;
 float fps = 0;
-float fps_media = 0;
+float fps_mean = 0;
 long long quadros = 0;
 Uint32 start_time, frame_time = 0;
 
@@ -109,6 +109,10 @@ const std::unique_ptr<Vveryga> topp{new Vveryga{contextp.get(), ""}};
 
 SDL_Window *window;
 SDL_Renderer *renderer;
+SDL_Texture *numbers;
+SDL_Rect a1_pos_rect;
+SDL_Rect a0_pos_rect;
+SDL_Rect clip_rect;
 
 #ifdef EMSCRIPTEN
 
@@ -137,7 +141,7 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
             rst = 0;
         }
         else if (!strcmp(keyEvent->code, "KeyF")){
-            printf("%03.2f fps\n", fps);
+            printf("framerate %03.2f fps\n", fps);
         }
         else if (!strcmp(keyEvent->code, "KeyB"))
         {
@@ -148,10 +152,10 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
 
             // Execute 'final' processes
             topp->final();
-            printf("%03.2f fps\n", fps_media);
+            
             // Print statistical summary report
             contextp->statsPrintSummary();
-
+            printf("- Verilator: framerate %03.2f fps\n", fps_mean);
             // glfwDestroyWindow(window);
 
             // glfwTerminate();
@@ -199,7 +203,7 @@ int event_listener()
                 rst = 0;
                 break;
             case SDLK_f:
-                printf("%03.2f fps\n", fps);
+                printf("-framerate %03.2f fps\n", fps);
                 break;
             }
             break;
@@ -215,10 +219,10 @@ int event_listener()
             
             // Execute 'final' processes
             topp->final();
-            printf("%03.2f fps\n", fps_media);
+            
             // Print statistical summary report
             contextp->statsPrintSummary();
-
+            printf("- Verilator: framerate %03.2f fps\n", fps_mean);
             // glfwDestroyWindow(window);
 
             // glfwTerminate();
@@ -243,7 +247,44 @@ int set_window()
     renderer = SDL_CreateRenderer(window, -1, 0);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
+
+    SDL_Surface * numbers_img = SDL_LoadBMP("../assets/numbers.bmp");
+
+    if(numbers_img )
+
+    numbers = SDL_CreateTextureFromSurface(renderer, numbers_img);
+
+    a1_pos_rect = SDL_Rect();
+    a1_pos_rect.h = 16;
+    a1_pos_rect.w = 8;
+    a1_pos_rect.x = 10;
+    a1_pos_rect.y = 10;
+    a0_pos_rect = SDL_Rect();
+    a0_pos_rect.h = 16;
+    a0_pos_rect.w = 8;
+    a0_pos_rect.x = 18;
+    a0_pos_rect.y = 10;
+
+    clip_rect = SDL_Rect();
+    clip_rect.h = 16;
+    clip_rect.w = 8;
+    clip_rect.x = 0;
+    clip_rect.y = 0;
+
     return 0;
+}
+
+void draw_fps(float fps){
+    int a1, a0;
+    a1 = (int)(fps/10.f);
+    a0 = (int)(fps-(a1*10));
+    if(a1 >= 10){
+        a1 = 9;
+    }
+    clip_rect.x = 8*a1;
+    SDL_RenderCopy(renderer,numbers,&clip_rect,&a1_pos_rect);
+    clip_rect.x = 8*a0;
+    SDL_RenderCopy(renderer,numbers,&clip_rect,&a0_pos_rect);
 }
 
 double timestamp = 0;
@@ -330,17 +371,20 @@ void loop()
 #ifndef EMSCRIPTEN
                     event_listener();
 #endif
-                    SDL_RenderPresent(renderer);
+                    
                     if (vcount > 0)
                     {
+                        draw_fps(fps);
+                        SDL_RenderPresent(renderer);
                         vcount = 0;
                         frame_time = SDL_GetTicks() - start_time;
                         fps = (frame_time > 0) ? 1000.0f / frame_time : 0.0f;
 
                         start_time = SDL_GetTicks();frame_time = SDL_GetTicks() - start_time;
-                        fps_media = ((fps_media*quadros) + fps);
+                        fps_mean = ((fps_mean*quadros) + fps);
                         quadros++;
-                        fps_media /= quadros;
+                        fps_mean /= quadros;
+                        
 
                         return;
                     }
