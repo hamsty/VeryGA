@@ -14,8 +14,6 @@ compile_commands = [
 
 server_up = False
 
-old_cell = ""
-
 @magics_class
 class VeryGAPlugin(Magics):
 
@@ -39,12 +37,8 @@ class VeryGAPlugin(Magics):
           with open(os.path.join("/content/VeryMaze/designs",filename),"w") as verygav:
             verygav.write(cell)
           if args.top:
-            if old_cell != cell:
-              for command in tqdm_notebook(compile_commands,desc=f"Compiling"):
-                output = subprocess.check_output(command,stderr=subprocess.STDOUT, shell=True, executable="/bin/bash")
-            else:
-              print("No changes detected, skipping compile!")
-            old_cell = cell
+            for command in tqdm_notebook(compile_commands,desc=f"Compiling"):
+              output = subprocess.check_output(command,stderr=subprocess.STDOUT, shell=True, executable="/bin/bash")
             if not server_up:
               get_ipython().system_raw("python -m http.server --directory VeryGA/build &")
               server_up = True

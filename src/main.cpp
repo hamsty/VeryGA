@@ -1,3 +1,4 @@
+
 // Verilated -*- C++ -*-
 // DESCRIPTION: main() calling loop, created with Verilator --main
 
@@ -26,9 +27,11 @@
 
 uint32_t mov;
 int rst = 2;
-float fps = 0;
-float fps_mean = 0;
-long long quadros = 0;
+double fps = 0.;
+double fps_mean = 0.;
+
+bool running = true;
+
 Uint32 start_time, frame_time = 0;
 
 // static void error_callback(int error, const char *description)
@@ -152,6 +155,7 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
 
             // Execute 'final' processes
             topp->final();
+            running = false;
             
             // Print statistical summary report
             contextp->statsPrintSummary();
@@ -219,6 +223,7 @@ int event_listener()
             
             // Execute 'final' processes
             topp->final();
+            running = false;
             
             // Print statistical summary report
             contextp->statsPrintSummary();
@@ -302,12 +307,13 @@ int hsync = 1;
 int vsync = 1;
 int clk = 0;
 int en_hcount = true;
-
+long long squadros = 0;
+long long quadros = 0;
 
 void loop()
 {
-
-    while (true)
+    
+    while (running)
     {
 
         // Evaluate model
@@ -374,18 +380,20 @@ void loop()
                     
                     if (vcount > 0)
                     {
-                        draw_fps(fps);
-                        SDL_RenderPresent(renderer);
                         vcount = 0;
+                        squadros++;
+                        draw_fps(fps);  
+                        SDL_RenderPresent(renderer);
                         frame_time = SDL_GetTicks() - start_time;
-                        fps = (frame_time > 0) ? 1000.0f / frame_time : 0.0f;
-
-                        start_time = SDL_GetTicks();frame_time = SDL_GetTicks() - start_time;
-                        fps_mean = ((fps_mean*quadros) + fps);
-                        quadros++;
-                        fps_mean /= quadros;
-                        
-
+                        if(frame_time  > 1000){
+                            fps = (1000.0 * squadros) / frame_time;
+                            fps_mean = ((fps_mean * quadros) + (fps* squadros));
+                            quadros = quadros + squadros;
+                            fps_mean /= quadros;
+                            squadros = 0;
+                            start_time = SDL_GetTicks();
+                            
+                        }
                         return;
                     }
                     vcount = 0;
