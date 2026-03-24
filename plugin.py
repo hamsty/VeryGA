@@ -18,8 +18,8 @@ install_steps = {
     mold libgoogle-perftools-dev numactl perl-doc"], 
     "EMSCRIPTEN": [
     "git clone https://github.com/emscripten-core/emsdk.git",
-    "./emsdk/emsdk install latest",
-    "./emsdk/emsdk activate latest",
+    "./emsdk/emsdk install 4.0.23",
+    "./emsdk/emsdk activate 4.0.23",
     "source ./emsdk/emsdk_env.sh"]
 }
 
