@@ -12,3 +12,4 @@ glad/*
 */__pycache__/*
 __pycache__/
 VeryGAPlugin.egg-info/*
+test/*
