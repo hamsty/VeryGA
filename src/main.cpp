@@ -43,8 +43,6 @@ const std::unique_ptr<VerilatedContext> contextp{new VerilatedContext};
 
 const std::unique_ptr<Vveryga> topp{new Vveryga{contextp.get(), ""}};
 
-
-
 // static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
 // {
 //     if (key == GLFW_KEY_UP && action == GLFW_PRESS)
@@ -143,7 +141,8 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
         {
             rst = 0;
         }
-        else if (!strcmp(keyEvent->code, "KeyF")){
+        else if (!strcmp(keyEvent->code, "KeyF"))
+        {
             printf("framerate %03.2f fps\n", fps);
         }
         else if (!strcmp(keyEvent->code, "KeyB"))
@@ -156,7 +155,7 @@ bool key_callback(int eventType, const EmscriptenKeyboardEvent *keyEvent, void *
             // Execute 'final' processes
             topp->final();
             running = false;
-            
+
             // Print statistical summary report
             contextp->statsPrintSummary();
             printf("- Verilator: framerate %03.2f fps\n", fps_mean);
@@ -220,11 +219,11 @@ int event_listener()
             {
                 VL_DEBUG_IF(VL_PRINTF("+ Exiting without $finish; no events left\n"););
             }
-            
+
             // Execute 'final' processes
             topp->final();
             running = false;
-            
+
             // Print statistical summary report
             contextp->statsPrintSummary();
             printf("- Verilator: framerate %03.2f fps\n", fps_mean);
@@ -253,11 +252,11 @@ int set_window()
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
 
-    SDL_Surface * numbers_img = SDL_LoadBMP("../assets/numbers.bmp");
+    SDL_Surface *numbers_img = SDL_LoadBMP("../assets/numbers.bmp");
 
-    if(numbers_img )
+    if (numbers_img)
 
-    numbers = SDL_CreateTextureFromSurface(renderer, numbers_img);
+        numbers = SDL_CreateTextureFromSurface(renderer, numbers_img);
 
     a1_pos_rect = SDL_Rect();
     a1_pos_rect.h = 16;
@@ -279,17 +278,19 @@ int set_window()
     return 0;
 }
 
-void draw_fps(float fps){
+void draw_fps(float fps)
+{
     int a1, a0;
-    a1 = (int)(fps/10.f);
-    a0 = (int)(fps-(a1*10));
-    if(a1 >= 10){
+    a1 = (int)(fps / 10.f);
+    a0 = (int)(fps - (a1 * 10));
+    if (a1 >= 10)
+    {
         a1 = 9;
     }
-    clip_rect.x = 8*a1;
-    SDL_RenderCopy(renderer,numbers,&clip_rect,&a1_pos_rect);
-    clip_rect.x = 8*a0;
-    SDL_RenderCopy(renderer,numbers,&clip_rect,&a0_pos_rect);
+    clip_rect.x = 8 * a1;
+    SDL_RenderCopy(renderer, numbers, &clip_rect, &a1_pos_rect);
+    clip_rect.x = 8 * a0;
+    SDL_RenderCopy(renderer, numbers, &clip_rect, &a0_pos_rect);
 }
 
 double timestamp = 0;
@@ -310,10 +311,11 @@ int en_hcount = true;
 long long squadros = 0;
 long long quadros = 0;
 
-uint64_t simulate(uint64_t in){
-    
+uint64_t simulate(uint64_t in)
+{
+
     contextp->timeInc(tick);
-    
+
     topp->in = in;
 
     topp->eval();
@@ -321,58 +323,47 @@ uint64_t simulate(uint64_t in){
     return topp->out;
 }
 
-void draw_vga()
+//return true if frame is completed
+bool draw_vga(uint64_t out)
 {
-    
-    while (running)
+
+    hsync = (out & 0x2000) >> 13;
+    vsync = (out & 0x1000) >> 12;
+
+    // VL_PRINTF("%lu %lu\n", out, topp->in);
+
+    if (clk == 1 && old_clk == 0)
     {
-
-        // Evaluate model
-        uint64_t in = !clk;
-        clk = (in & 1);
-
-        in += mov << 2;
-        in += rst;
-
-        out = simulate(in);
-
-        hsync = (out & 0x2000) >> 13;
-        vsync = (out & 0x1000) >> 12;
-
-        // VL_PRINTF("%lu %lu\n", out, topp->in);
-
-        if (clk == 1 && old_clk == 0)
+        if (rst == 2)
         {
-            if (rst == 2)
+            if (hsync == 0 && old_hsync == 1)
             {
-                if (hsync == 0 && old_hsync == 1)
+                hcount = 0;
+            }
+            else
+            {
+                if (true)
                 {
-                    hcount = 0;
-                }
-                else
-                {
-                    if (true)
-                    {
-                        hcount++;
+                    hcount++;
 
-                        if (hcount > 144 && hcount < 784)
-                        {
-                            x++;
-                        }
-                        else
-                        {
-                            x = 0;
-                        }
-                        en_hcount = false;
+                    if (hcount > 144 && hcount < 784)
+                    {
+                        x++;
                     }
                     else
                     {
-                        en_hcount = true;
+                        x = 0;
                     }
+                    en_hcount = false;
                 }
-
-                if (vsync == 0 && old_vsync == 1)
+                else
                 {
+                    en_hcount = true;
+                }
+            }
+
+            if (vsync == 0 && old_vsync == 1)
+            {
 
 // glClear(GL_COLOR_BUFFER_BIT);
 
@@ -382,70 +373,88 @@ void draw_vga()
 
 // glfwPollEvents();
 #ifndef EMSCRIPTEN
-                    event_listener();
+                event_listener();
 #endif
-                    
-                    if (vcount > 0)
-                    {
-                        vcount = 0;
-                        squadros++;
-                        draw_fps(fps);  
-                        SDL_RenderPresent(renderer);
-                        frame_time = SDL_GetTicks() - start_time;
-                        if(frame_time  > 1000){
-                            fps = (1000.0 * squadros) / frame_time;
-                            fps_mean = ((fps_mean * quadros) + (fps* squadros));
-                            quadros = quadros + squadros;
-                            fps_mean /= quadros;
-                            squadros = 0;
-                            start_time = SDL_GetTicks();
-                            
-                        }
-                        return;
-                    }
-                    vcount = 0;
-                }
-                else
-                {
-                    if (hsync == 0 && old_hsync == 1)
-                    {
-                        vcount++;
-                        if (vcount > 35 && vcount < 515)
-                        {
-                            y++;
-                        }
-                        else
-                        {
-                            y = 0;
-                        }
-                    }
-                }
-                old_vsync = vsync;
-                old_hsync = hsync;
 
-                if (vcount > 35 && hcount > 144 && vcount < 515 && hcount < 784)
+                if (vcount > 0)
                 {
-                    // offset = ((479 - y) * 640 + x) * 3;
-                    // pixels[offset + 0] = ((out & 0xF00) >> 8) * 17;
-                    // pixels[offset + 1] = ((out & 0xF0) >> 4) * 17;
-                    // pixels[offset + 2] = (out & 0xF) * 17;
-                    uint8_t R = ((out & 0xF00) >> 8) * 17;
-                    uint8_t G = ((out & 0xF0) >> 4) * 17;
-                    uint8_t B = (out & 0xF) * 17;
-                    SDL_SetRenderDrawColor(renderer, R, G, B, 255);
-                    SDL_RenderDrawPoint(renderer, x, y);
+                    vcount = 0;
+                    squadros++;
+                    draw_fps(fps);
+                    SDL_RenderPresent(renderer);
+                    frame_time = SDL_GetTicks() - start_time;
+                    if (frame_time > 1000)
+                    {
+                        fps = (1000.0 * squadros) / frame_time;
+                        fps_mean = ((fps_mean * quadros) + (fps * squadros));
+                        quadros = quadros + squadros;
+                        fps_mean /= quadros;
+                        squadros = 0;
+                        start_time = SDL_GetTicks();
+                    }
+                    return true;
                 }
+                vcount = 0;
             }
             else
             {
-#ifndef EMSCRIPTEN
-                event_listener();
-#endif
-                return;
-                // glfwPollEvents();
+                if (hsync == 0 && old_hsync == 1)
+                {
+                    vcount++;
+                    if (vcount > 35 && vcount < 515)
+                    {
+                        y++;
+                    }
+                    else
+                    {
+                        y = 0;
+                    }
+                }
+            }
+            old_vsync = vsync;
+            old_hsync = hsync;
+
+            if (vcount > 35 && hcount > 144 && vcount < 515 && hcount < 784)
+            {
+                // offset = ((479 - y) * 640 + x) * 3;
+                // pixels[offset + 0] = ((out & 0xF00) >> 8) * 17;
+                // pixels[offset + 1] = ((out & 0xF0) >> 4) * 17;
+                // pixels[offset + 2] = (out & 0xF) * 17;
+                uint8_t R = ((out & 0xF00) >> 8) * 17;
+                uint8_t G = ((out & 0xF0) >> 4) * 17;
+                uint8_t B = (out & 0xF) * 17;
+                SDL_SetRenderDrawColor(renderer, R, G, B, 255);
+                SDL_RenderDrawPoint(renderer, x, y);
             }
         }
-        old_clk = clk;
+        else
+        {
+#ifndef EMSCRIPTEN
+            event_listener();
+#endif
+            return true;
+            // glfwPollEvents();
+        }
+    }
+    old_clk = clk;
+    return false;
+}
+
+
+void loop()
+{
+    bool break_loop = false;
+    while (running && !break_loop)
+    {
+        uint64_t in = !clk;
+        clk = (in & 1);
+
+        in += mov << 2;
+        in += rst;
+
+        uint64_t out = simulate(in);
+
+        break_loop = loop(out);
     }
 }
 
