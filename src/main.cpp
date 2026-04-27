@@ -310,24 +310,31 @@ int en_hcount = true;
 long long squadros = 0;
 long long quadros = 0;
 
-void loop()
+uint64_t simulate(uint64_t in){
+    
+    contextp->timeInc(tick);
+    
+    topp->in = in;
+
+    topp->eval();
+
+    return topp->out;
+}
+
+void draw_vga()
 {
     
     while (running)
     {
 
         // Evaluate model
-        contextp->timeInc(tick);
+        uint64_t in = !clk;
+        clk = (in & 1);
 
-        topp->in = !clk;
-        clk = (topp->in & 1);
+        in += mov << 2;
+        in += rst;
 
-        topp->in += mov << 2;
-        topp->in += rst;
-
-        topp->eval();
-
-        out = topp->out;
+        out = simulate(in);
 
         hsync = (out & 0x2000) >> 13;
         vsync = (out & 0x1000) >> 12;
